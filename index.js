@@ -37,6 +37,31 @@ async function run() {
       res.send(all_details);
     });
 
+    app.get("/popularClasses", async (req, res) => {
+      const query = {};
+
+      const options = {
+        sort: {
+          availableSeats: 1,
+        },
+
+        projection: {
+          _id: 1,
+          className: 1,
+          classImage: 1,
+          availableSeats: 1,
+          price: 1,
+        },
+      };
+
+      const popularClasses = await database
+        .collection("all class's details")
+        .find(query, options)
+        .toArray();
+
+      res.send(popularClasses);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
