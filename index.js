@@ -86,6 +86,38 @@ async function run() {
       res.send(popularInstructors);
     });
 
+    app.get("/confirmedClasses", async (req, res) => {
+      const email = req.query.email;
+
+      if (!email) {
+        res.send([]);
+      }
+
+      const query = { studentEmail: email };
+
+      const confirmedClasses = await database
+        .collection("confirmed classes")
+        .find(query)
+        .toArray();
+
+      res.send(confirmedClasses);
+    });
+
+    app.post("/confirmedClasses", async (req, res) => {
+      const confirmedClasses = database.collection("confirmed classes");
+      const studentDetails = req.body;
+      const result = await confirmedClasses.insertOne(studentDetails);
+      res.send(result);
+    });
+
+    app.delete("/confirmedClasses/:classId", async (req, res) => {
+      const id = req.params.classId;
+      const query = { classId: id };
+      const confirmedClasses = database.collection("confirmed classes");
+      const result = await confirmedClasses.deleteOne(query);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
