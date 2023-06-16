@@ -140,6 +140,13 @@ async function run() {
       const result = await confirmedClasses.insertOne(paymentDetails);
       res.send(result);
     });
+
+    app.post("/enrollmentClasses", async (req, res) => {
+      const confirmedClasses = database.collection("enrollment classes");
+      const enrollmentClassesDetails = req.body;
+      const result = await confirmedClasses.insertOne(enrollmentClassesDetails);
+      res.send(result);
+    });
   } catch {
     // Ensures that the client will close when you finish/error
     await client.close();
