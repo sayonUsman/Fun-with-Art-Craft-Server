@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const database = client.db("Fun_with_Art_Craft");
+    const confirmedClasses = database.collection("confirmed classes");
 
     app.get("/", async (req, res) => {
       res.send("Server is running.");
@@ -93,26 +94,26 @@ async function run() {
       }
 
       const query = { studentEmail: email };
-
-      const confirmedClasses = await database
-        .collection("confirmed classes")
-        .find(query)
-        .toArray();
-
-      res.send(confirmedClasses);
+      const result = await confirmedClasses.find(query).toArray();
+      res.send(result);
     });
 
     app.post("/confirmedClasses", async (req, res) => {
-      const confirmedClasses = database.collection("confirmed classes");
       const studentDetails = req.body;
       const result = await confirmedClasses.insertOne(studentDetails);
+      res.send(result);
+    });
+
+    app.delete("/confirmedClasses", async (req, res) => {
+      const email = req.query.email;
+      const query = { studentEmail: { $regex: email } };
+      const result = await confirmedClasses.deleteMany(query);
       res.send(result);
     });
 
     app.delete("/confirmedClasses/:classId", async (req, res) => {
       const id = req.params.classId;
       const query = { classId: id };
-      const confirmedClasses = database.collection("confirmed classes");
       const result = await confirmedClasses.deleteOne(query);
       res.send(result);
     });
