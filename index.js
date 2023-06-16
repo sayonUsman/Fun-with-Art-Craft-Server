@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -113,6 +114,29 @@ async function run() {
       const query = { classId: id };
       const confirmedClasses = database.collection("confirmed classes");
       const result = await confirmedClasses.deleteOne(query);
+      res.send(result);
+    });
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payment-details", async (req, res) => {
+      const confirmedClasses = database.collection("payment history");
+      const paymentDetails = req.body;
+      const result = await confirmedClasses.insertOne(paymentDetails);
       res.send(result);
     });
   } catch {
