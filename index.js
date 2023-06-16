@@ -24,6 +24,7 @@ async function run() {
   try {
     const database = client.db("Fun_with_Art_Craft");
     const confirmedClasses = database.collection("confirmed classes");
+    const enrollmentClasses = database.collection("enrollment classes");
 
     app.get("/", async (req, res) => {
       res.send("Server is running.");
@@ -142,9 +143,22 @@ async function run() {
     });
 
     app.post("/enrollmentClasses", async (req, res) => {
-      const confirmedClasses = database.collection("enrollment classes");
       const enrollmentClassesDetails = req.body;
-      const result = await confirmedClasses.insertOne(enrollmentClassesDetails);
+      const result = await enrollmentClasses.insertOne(
+        enrollmentClassesDetails
+      );
+      res.send(result);
+    });
+
+    app.get("/enrollmentClasses", async (req, res) => {
+      const email = req.query.email;
+
+      if (!email) {
+        res.send([]);
+      }
+
+      const query = { studentEmail: email };
+      const result = await enrollmentClasses.find(query).toArray();
       res.send(result);
     });
   } catch {
