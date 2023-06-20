@@ -25,6 +25,7 @@ async function run() {
     const database = client.db("Fun_with_Art_Craft");
     const confirmedClasses = database.collection("confirmed classes");
     const enrollmentClasses = database.collection("enrollment classes");
+    const paymentsHistory = database.collection("payment history");
 
     app.get("/", async (req, res) => {
       res.send("Server is running.");
@@ -136,9 +137,20 @@ async function run() {
     });
 
     app.post("/payment-details", async (req, res) => {
-      const confirmedClasses = database.collection("payment history");
       const paymentDetails = req.body;
-      const result = await confirmedClasses.insertOne(paymentDetails);
+      const result = await paymentsHistory.insertOne(paymentDetails);
+      res.send(result);
+    });
+
+    app.get("/payments-history", async (req, res) => {
+      const email = req.query.email;
+
+      if (!email) {
+        res.send([]);
+      }
+
+      const query = { email: email };
+      const result = await paymentsHistory.find(query).toArray();
       res.send(result);
     });
 
