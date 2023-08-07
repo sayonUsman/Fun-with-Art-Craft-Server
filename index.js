@@ -2,12 +2,33 @@ const express = require("express");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "Unauthorized Access" });
+  } else {
+    const authorizationToken = authorization.split(" ")[1];
+
+    jwt.verify(authorizationToken, process.env.SECRET_KEY, (err, decoded) => {
+      if (err) {
+        return res.send({ error: true, err });
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    });
+  }
+};
 
 const uri = `${process.env.DB_URI}`;
 
@@ -27,8 +48,17 @@ async function run() {
     const enrollmentClasses = database.collection("enrollment classes");
     const paymentsHistory = database.collection("payment history");
 
-    app.get("/", async (req, res) => {
+    app.get("/", (req, res) => {
       res.send("Server is running.");
+    });
+
+    //jwt
+    app.post("/jwt", (req, res) => {
+      const userEmail = req.body;
+      const token = jwt.sign(userEmail, process.env.SECRET_KEY, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
     });
 
     app.get("/all_details", async (req, res) => {
@@ -88,7 +118,7 @@ async function run() {
       res.send(popularInstructors);
     });
 
-    app.get("/confirmedClasses", async (req, res) => {
+    app.get("/confirmedClasses", verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
@@ -142,7 +172,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/payments-history", async (req, res) => {
+    app.get("/payments-history", verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
@@ -162,7 +192,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/enrollmentClasses", async (req, res) => {
+    app.get("/enrollmentClasses", verifyJWT, async (req, res) => {
       const email = req.query.email;
 
       if (!email) {
